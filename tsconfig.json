@@ -3,8 +3,18 @@
         "target": "es5",
         "module": "commonjs",
         "declaration": true,
-        "rootDir": "src",
+        "rootDir": "./",
         "outDir": "./dist",
         "strict": true,
-    }
+        "allowJs": false,
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "*.config.*",
+        "src/**/*.spec.ts"
+    ]
 }
