@@ -52,6 +52,14 @@ var messageStore = LlamaStore.persistent("messageStore", storeConfig);
 |             | `onStoreRemoveSuccess(key)`        | Called when the store was updated           |
 |             | `onStoreRemoveFailure(key)`        | Called when the store was updated           |
 
+## Tests
+
+This project has tests written with Jest.
+
+**Other tools**
+
+-   [jest-localstorage-mock](https://www.npmjs.com/package/jest-localstorage-mock)
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

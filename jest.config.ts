@@ -9,4 +9,9 @@ module.exports = {
     "transform": {
         "^.+\\.(ts|tsx)$": "ts-jest"
     },
+    "setupFilesAfterEnv": [
+        "<rootDir>/tests/setup.js"
+    ],
+    "testEnvironment": "jsdom",
+    "resetMocks": false,
 }
