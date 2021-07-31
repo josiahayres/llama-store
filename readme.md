@@ -14,33 +14,42 @@ npm install llama-store
 ## Usage
 
 ```typescript
-import LlamaStore from "llama-store";
+import LlamaStore from 'llama-store';
+
+interface MyAppStore extends Record<string, any> {
+    name: string;
+    age: number;
+}
 
 // Using localStorage
-var appStore = LlamaStore.persistent("appStore");
-//or
-// Using sessionStorage
-var messageStore = LlamaStore.perishable("messageStore");
+const store = new LlamaStore<MyAppStore>('storeName');
 ```
 
 ## API
 
-| Implemented | Method                  | Description      |
-| :---------- | :---------------------- | :--------------- |
-| ✅          | `persistent(storeName)` | Create new store |
+| Method                           | Description                                             |
+| :------------------------------- | :------------------------------------------------------ |
+| `new LlamaStore<T>("storeName")` | Create new instance of a llamaStore                     |
+| `.get(key)`                      | Returns stored value                                    |
+| `.set(key, value)`               | `JSON.stringify(value)` and stores that to localStorage |
+| `.delete(key)`                   | `JSON.stringify(value)` and stores that to localStorage |
+| `.knownKeys()`                   | Returns a list of keys stored for this storeName.       |
+| `.storeConfig `                  | Returns config about store.                             |
 
 ### Events
+
+> These are a work in progress
 
 ```typescript
 // Write your event handler
 const handleStoreSetupSuccess = (storeName: string) => {
-	console.log(`[LlamaStore] []${storeName}`);
+    console.log(`[LlamaStore] []${storeName}`);
 };
 
 const storeConfig = {
-	onStoreSetupSuccess: handleStoreSetupSuccess,
+    onStoreSetupSuccess: handleStoreSetupSuccess,
 };
-var messageStore = LlamaStore.persistent("messageStore", storeConfig);
+var messageStore = LlamaStore.persistent('messageStore', storeConfig);
 ```
 
 | Implemented | Event name                         | Description                                 |
@@ -56,9 +65,11 @@ var messageStore = LlamaStore.persistent("messageStore", storeConfig);
 
 This project has tests written with Jest.
 
-**Other tools**
+To run the tests: `npm run test`
 
--   [jest-localstorage-mock](https://www.npmjs.com/package/jest-localstorage-mock)
+**Test dependencies:**
+
+-   [jest-localstorage-mock](https://www.npmjs.com/package/jest-localstorage-mock) makes it easy to interact with localStorage API is Jest tests.
 
 ## Contributing
 
