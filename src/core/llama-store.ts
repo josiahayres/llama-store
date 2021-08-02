@@ -1,4 +1,4 @@
-type StoreHistory = {
+type LlamaStoreMeta = {
     /** Timestamp Date.now() of last time localStorage was created.  */
     createdAt: string;
     /** Timestamp Date.now() of last time localStorage was accessed.  */
@@ -12,22 +12,23 @@ type StoreHistory = {
  */
 export type LlamaStoreConfig<T> = {
     storeName: string;
-    keysAvailable: Array<keyof T>;
-    storeConfig: StoreHistory;
+    keysAvailable: Set<keyof T>;
+    meta: LlamaStoreMeta;
 };
 
 export class LlamaStore<T> {
-    private storeName: string;
-    private keysAvailable: Set<keyof T>;
-    storeConfig: StoreHistory;
+    private llamaStoreConfig: LlamaStoreConfig<T> = {
+        storeName: 'default_llama_store',
+        keysAvailable: new Set([]),
+        meta: { createdAt: '' },
+    };
+    get storeName() {
+        return this.llamaStoreConfig.storeName;
+    }
 
-    constructor(storeName: string = 'default_llama_store') {
-        this.storeName = storeName;
-        this.keysAvailable = new Set();
-        this.storeConfig = {
-            createdAt: Date.now().toString(),
-        };
-
+    constructor(storeName: string) {
+        const name = storeName || 'default_llama_store';
+        this.llamaStoreConfig.storeName = name;
         const existingStoreConfig = localStorage.getItem(
             this.getStoreConfigName()
         );
@@ -36,9 +37,23 @@ export class LlamaStore<T> {
             const parsedConfig: LlamaStoreConfig<T> =
                 JSON.parse(existingStoreConfig);
             const keysAsSet = new Set(parsedConfig.keysAvailable);
-            this.keysAvailable = keysAsSet;
+
+            this.llamaStoreConfig = {
+                storeName,
+                keysAvailable: keysAsSet,
+                meta: parsedConfig.meta,
+            };
         } else {
             // Must initialize the store
+
+            const initialStore = {
+                storeName,
+                keysAvailable: new Set([]),
+                meta: {
+                    createdAt: Date.now().toString(),
+                },
+            };
+            this.llamaStoreConfig = initialStore;
             this.saveCurrentConfig();
         }
     }
@@ -55,14 +70,14 @@ export class LlamaStore<T> {
      * Updates storeConfig metadata
      */
     private storeUpdated() {
-        this.storeConfig.lastUpdated = Date.now().toString();
+        this.llamaStoreConfig.meta.lastUpdated = Date.now().toString();
     }
 
     /**
      * Updates storeConfig metadata
      */
     private storeAccessed() {
-        this.storeConfig.lastAccessed = Date.now().toString();
+        this.llamaStoreConfig.meta.lastAccessed = Date.now().toString();
     }
 
     /**
@@ -75,20 +90,24 @@ export class LlamaStore<T> {
     }
 
     private saveCurrentConfig() {
-        const llamaConfig: LlamaStoreConfig<T> = {
-            storeName: this.storeName,
-            keysAvailable: Array.from(this.keysAvailable),
-            storeConfig: this.storeConfig,
-        };
+        function Set_toJSON(key: string, value: any) {
+            if (typeof value === 'object' && value instanceof Set) {
+                return Array.from(value);
+            }
+            return value;
+        }
         const storeConfigName = this.getStoreConfigName();
-        const llamaConfigStr = JSON.stringify(llamaConfig);
+        const llamaConfigStr = JSON.stringify(
+            this.llamaStoreConfig,
+            Set_toJSON
+        );
         localStorage.setItem(storeConfigName, llamaConfigStr);
     }
 
     get knownKeys() {
         this.storeAccessed();
         this.saveCurrentConfig();
-        return this.keysAvailable;
+        return this.llamaStoreConfig.keysAvailable;
     }
 
     get<K extends keyof T>(key: K): T[K] | null {
@@ -116,7 +135,7 @@ export class LlamaStore<T> {
             // Try to JSON.stringify when value not string
             let valueAsString = JSON.stringify(value);
             localStorage.setItem(this.localStorageKeyFor(key), valueAsString);
-            this.keysAvailable.add(key);
+            this.llamaStoreConfig.keysAvailable.add(key);
         } catch (error) {
             throw Error(error);
         }
@@ -130,7 +149,7 @@ export class LlamaStore<T> {
     delete<K extends keyof T>(key: K) {
         this.storeUpdated();
         localStorage.removeItem(this.localStorageKeyFor(key));
-        this.keysAvailable.delete(key);
+        this.llamaStoreConfig.keysAvailable.delete(key);
         this.saveCurrentConfig();
     }
 }

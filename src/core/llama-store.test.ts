@@ -27,7 +27,7 @@ describe('LlamaStore', () => {
         expect(store.knownKeys.has('age')).toBeTruthy();
 
         expect(localStorage.__STORE__['test_store_config']).toContain(
-            '{"storeName":"test_store","keysAvailable":["age"],"storeConfig":{"createdAt":"'
+            '{"storeName":"test_store","keysAvailable":["age"],"meta":{"createdAt":"'
         );
 
         const age = store.get('age');
@@ -111,7 +111,7 @@ describe('LlamaStore', () => {
     });
 });
 
-describe('Default store', () => {
+describe('Default store name when empty name provided', () => {
     beforeAll(() => {
         localStorage.clear();
         jest.clearAllMocks();
@@ -119,7 +119,7 @@ describe('Default store', () => {
     it('Store can still setup without provided name', () => {
         expect(localStorage.getItem).not.toHaveBeenCalled();
         expect(localStorage.setItem).not.toHaveBeenCalled();
-        const defaultStore = new LlamaStore<MyStore>();
+        const defaultStore = new LlamaStore<MyStore>('');
         expect(localStorage.getItem).toHaveBeenCalledWith(
             'default_llama_store_config'
         );
