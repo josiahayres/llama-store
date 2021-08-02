@@ -7,6 +7,16 @@ type LlamaStoreMeta = {
     lastUpdated?: string;
 };
 
+export type storeInitializeEvent<T> = (
+    configuration: LlamaStoreConfig<T>
+) => void;
+export type storeResetEvent<T> = (configuration: LlamaStoreConfig<T>) => void;
+
+export type LlamaStoreOptions<T> = {
+    onStoreInitialize?: storeInitializeEvent<T>;
+    onStoreRestore?: storeResetEvent<T>;
+};
+
 /**
  * LlamaStoreConfig is stored
  */
@@ -17,6 +27,7 @@ export type LlamaStoreConfig<T> = {
 };
 
 export class LlamaStore<T> {
+    private onStoreInitialize?: storeInitializeEvent<T>;
     private llamaStoreConfig: LlamaStoreConfig<T> = {
         storeName: 'default_llama_store',
         keysAvailable: new Set([]),
@@ -26,7 +37,8 @@ export class LlamaStore<T> {
         return this.llamaStoreConfig.storeName;
     }
 
-    constructor(storeName: string) {
+    constructor(storeName: string, options?: LlamaStoreOptions<T>) {
+        this.onStoreInitialize = options?.onStoreInitialize?.bind(this);
         const name = storeName || 'default_llama_store';
         this.llamaStoreConfig.storeName = name;
         const existingStoreConfig = localStorage.getItem(
@@ -39,7 +51,7 @@ export class LlamaStore<T> {
             const keysAsSet = new Set(parsedConfig.keysAvailable);
 
             this.llamaStoreConfig = {
-                storeName,
+                storeName: name,
                 keysAvailable: keysAsSet,
                 meta: parsedConfig.meta,
             };
@@ -55,6 +67,7 @@ export class LlamaStore<T> {
             };
             this.llamaStoreConfig = initialStore;
             this.saveCurrentConfig();
+            this.onStoreInitialize && this.onStoreInitialize(initialStore);
         }
     }
 

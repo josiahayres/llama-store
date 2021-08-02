@@ -1,4 +1,5 @@
 import { LlamaStore } from './llama-store';
+import type { LlamaStoreOptions } from './llama-store';
 interface MyStore extends Record<string, any> {
     name: string;
     age: number;
@@ -124,5 +125,26 @@ describe('Default store name when empty name provided', () => {
             'default_llama_store_config'
         );
         expect(localStorage.setItem).toHaveBeenCalled();
+    });
+});
+
+describe('Events', () => {
+    beforeEach(() => {
+        localStorage.clear();
+        jest.clearAllMocks();
+    });
+    it('LlamaStore options ', () => {
+        const options: LlamaStoreOptions<MyStore> = {
+            onStoreInitialize: () => {},
+        };
+        const spy_onStoreInitialize = jest.spyOn(options, 'onStoreInitialize');
+        const defaultStore = new LlamaStore<MyStore>('store', options);
+        expect(spy_onStoreInitialize).toHaveBeenCalled();
+        expect(spy_onStoreInitialize).toHaveBeenCalledWith(
+            expect.objectContaining({
+                storeName: 'store',
+                keysAvailable: new Set([]),
+            })
+        );
     });
 });
