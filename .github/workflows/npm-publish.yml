@@ -17,20 +17,28 @@ jobs:
                   node-version: 14
             - run: npm ci
             - run: npm test
-    automated-version-bump:
+    npm-build-publish:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v2
-            - uses: actions/setup-node@v2
-            - uses: 'phips28/gh-action-bump-version@master'
-            - env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-            tag-prefix: 'v'
-            major-wording: 'MAJOR,cut-major'
-            minor-wording: 'add,Adds,new,feature'
-            patch-wording: 'patch,fixes,bugfix'
-            rc-wording: 'RELEASE,alpha'
+            - name: Checkout repository
+              uses: actions/checkout@master
+            # required - sets up auth in the node env
+            - name: Set up Node.js
+              uses: actions/setup-node@master
+              with:
+                  node-version: 12.x
+                  registry-url: 'https://npm.pkg.github.com'
+            # optional
+            - run: npm install
+            # optional
+            - run: npm run build
+              env:
+                  CI: true
+            # required
+            - name: version & publish
+              uses: geeman201/conventional-changelog-npm-publish/@v14
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     publish-npm:
         needs: build
