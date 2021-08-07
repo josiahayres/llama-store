@@ -1,5 +1,9 @@
 # llama-store
 
+![Statements](./coverage/badge-statements.svg)
+![Statements](./coverage/badge-lines.svg)
+![Statements](./coverage/badge-functions.svg)
+
 **llama-store** is a Typescript library for interacting with browser storage.
 It makes it easy to store large objects into localStorage, and lets you so you can make small changes quickly. The restored objects are much more accurate copies of the saved ones and the API is incredibly simple. E.g.:
 

@@ -5,13 +5,14 @@
     "main": "dist/src/index.js",
     "types": "dist/src/index.d.ts",
     "scripts": {
-        "pre-commit": "npm run prettier",
+        "pre-commit": "npm run prettier && test:badges",
         "prepublish": "npm run build",
         "build": "tsc",
         "prettier": "pretty-quick --staged",
         "start": "tsc --watch",
         "test": "jest",
-        "test:coverage": "jest --watch --coverage"
+        "test:coverage": "npm test -- --coverage",
+        "test:badges": "npm run test:coverage  && jest-coverage-badges"
     },
     "keywords": [
         "node",
@@ -25,6 +26,7 @@
         "@types/jest": "^26.0.24",
         "husky": "^7.0.1",
         "jest": "^27.0.6",
+        "jest-coverage-badges": "^1.1.2",
         "jest-localstorage-mock": "^2.4.14",
         "jsdom": "^16.6.0",
         "prettier": "^2.3.2",
@@ -33,7 +35,6 @@
         "ts-node": "^10.1.0",
         "typescript": "^4.3.5"
     },
-    "dependencies": {},
     "repository": {
         "type": "git",
         "url": "git+https://github.com/josiahayres/llama-store.git"
