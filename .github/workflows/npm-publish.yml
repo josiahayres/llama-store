@@ -4,8 +4,8 @@
 name: Test and Publish
 
 on:
-  release:
-    types: [created]
+  push: 
+    branches: [main]
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
           node-version: 14
           registry-url: https://registry.npmjs.org/
       - run: npm ci
-      - run: npm publish
+      - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_access_token}}
 
