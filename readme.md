@@ -9,61 +9,73 @@ It makes it easy to store large objects into localStorage, and lets you so you c
 
 ## Installation
 
-Use the package manager [npm](https://www.npmjs.com) to install foobar.
+Use the package manager [npm](https://www.npmjs.com) to install llama-store.
 
 ```bash
-npm install llama-store
+npm install @josiahayres/llama-store
 ```
 
 ## Usage
 
 ```typescript
-import LlamaStore from 'llama-store';
+import LlamaStore from '@josiahayres/llama-store';
 
 interface MyAppStore extends Record<string, any> {
     name: string;
     age: number;
 }
 
-// Using localStorage
 const store = new LlamaStore<MyAppStore>('storeName');
+
+store.set('name', 'Dr Llama');
+store.get('name'); // => "Dr Llama"
+
+store.get('age'); // => null
+store.set('age', 12345);
+store.get('age'); // => 12345
+
+store.knownKeys; // Set({name})
+store.knownKeys.has('name'); // => true
+store.knownKeys.has('unset'); // => false
+
+store.delete('age');
+store.get('age'); // => null
 ```
 
 ## API
 
-| Method                           | Description                                             |
-| :------------------------------- | :------------------------------------------------------ |
-| `new LlamaStore<T>("storeName")` | Create new instance of a llamaStore                     |
-| `.get(key)`                      | Returns stored value                                    |
-| `.set(key, value)`               | `JSON.stringify(value)` and stores that to localStorage |
-| `.delete(key)`                   | `JSON.stringify(value)` and stores that to localStorage |
-| `.knownKeys()`                   | Returns a list of keys stored for this storeName.       |
-| `.storeConfig `                  | Returns config about store.                             |
+| Method                           | Description                                                                                              |
+| :------------------------------- | :------------------------------------------------------------------------------------------------------- |
+| `new LlamaStore<T>("storeName")` | Create new instance of a llamaStore, where T describes the shape of what you're saving into localStorage |
+| `.get(key)`                      | Gets value for `key` from localStorage and returns `JSON.parse(value)`                                   |
+| `.set(key, value)`               | `JSON.stringify(value)` and stores that to localStorage                                                  |
+| `.delete(key)`                   | `JSON.stringify(value)` and stores that to localStorage                                                  |
+| `.knownKeys()`                   | Returns a list of keys stored for this storeName.                                                        |
+| `.storeConfig `                  | Returns config about store.                                                                              |
 
-### Events
+### Configuration
 
-> These are a work in progress
+You can provide a configuration object that allows you to hook into the following store events
 
 ```typescript
 // Write your event handler
-const handleStoreSetupSuccess = (storeName: string) => {
-    console.log(`[LlamaStore] []${storeName}`);
+const handleStoreSet = (key: string, value: any) => {
+    console.log(`[LlamaStore][set()] ${key} ${value}`);
 };
 
 const storeConfig = {
-    onStoreSetupSuccess: handleStoreSetupSuccess,
+    onStoreSet: handleStoreSet,
 };
 var messageStore = LlamaStore.persistent('messageStore', storeConfig);
 ```
 
-| Implemented | Event name                         | Description                                 |
-| :---------- | :--------------------------------- | :------------------------------------------ |
-| ✅          | `onStoreSetup(key, value)`         | Called when store                           |
-|             | `onStoreUpdateFailed(key, value)`  | Called when update to store failed          |
-|             | `onStoreLimitReached(error)`       | Called when update to store failed          |
-|             | `onStoreUpdateSuccess(key, value)` | Called after update to store was successful |
-|             | `onStoreRemoveSuccess(key)`        | Called when the store was updated           |
-|             | `onStoreRemoveFailure(key)`        | Called when the store was updated           |
+| Event name                         | Description                                                  |
+| :--------------------------------- | ------------------------------------------------------------ |
+| `onStoreInitialize(defaultConfig)` | Called when store is setup first time                        |
+| `onStoreRestore(restoredConfig)`   | Called when store is init & found matching config in storage |
+| `onStoreSet(key, value)`           | Called whenever store.set() is called                        |
+| `onStoreGet(key)`                  | Called whenever store.get() is called                        |
+| `onStoreDelete(key)`               | Called when the store.delete() is called                     |
 
 ## Tests
 
