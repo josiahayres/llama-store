@@ -19,7 +19,12 @@ jobs:
               with:
                   node-version: 12.x
                   registry-url: 'https://npm.pkg.github.com'
-
+            # optional
+            - run: npm install
+            # optional
+            - run: npm run build
+              env:
+                  CI: true
             # required
             - name: version & publish
               uses: geeman201/conventional-changelog-npm-publish/@v14
