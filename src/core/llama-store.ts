@@ -7,14 +7,20 @@ type LlamaStoreMeta = {
     lastUpdated?: string;
 };
 
-export type storeInitializeEvent<T> = (
+export type StoreInitializeEvent<T> = (
     configuration: LlamaStoreConfig<T>
 ) => void;
-export type storeResetEvent<T> = (configuration: LlamaStoreConfig<T>) => void;
+export type StoreSetEvent<T> = <K extends keyof T>(key: K, value: T[K]) => void;
+export type StoreGetEvent<T> = <K extends keyof T>(key: K) => void;
+export type StoreResetEvent<T> = (configuration: LlamaStoreOptions<T>) => void;
+export type StoreDeleteEvent<T> = <K extends keyof T>(key: K) => void;
 
 export type LlamaStoreOptions<T> = {
-    onStoreInitialize?: storeInitializeEvent<T>;
-    onStoreRestore?: storeResetEvent<T>;
+    onStoreInitialize?: StoreInitializeEvent<T>;
+    onStoreSet?: StoreSetEvent<T>;
+    onStoreGet?: StoreGetEvent<T>;
+    onStoreDelete?: StoreDeleteEvent<T>;
+    onStoreRestore?: StoreInitializeEvent<T>;
 };
 
 /**
@@ -27,18 +33,25 @@ export type LlamaStoreConfig<T> = {
 };
 
 export class LlamaStore<T> {
-    private onStoreInitialize?: storeInitializeEvent<T>;
+    private onStoreInitialize?: LlamaStoreOptions<T>['onStoreInitialize'];
+    private onStoreSet?: LlamaStoreOptions<T>['onStoreSet'];
+    private onStoreGet?: LlamaStoreOptions<T>['onStoreGet'];
+    private onStoreDelete?: LlamaStoreOptions<T>['onStoreDelete'];
+    private onStoreRestore?: LlamaStoreOptions<T>['onStoreRestore'];
+
     private llamaStoreConfig: LlamaStoreConfig<T> = {
         storeName: 'default_llama_store',
         keysAvailable: new Set([]),
         meta: { createdAt: '' },
     };
-    get storeName() {
-        return this.llamaStoreConfig.storeName;
-    }
 
     constructor(storeName: string, options?: LlamaStoreOptions<T>) {
         this.onStoreInitialize = options?.onStoreInitialize?.bind(this);
+        this.onStoreSet = options?.onStoreSet?.bind(this);
+        this.onStoreGet = options?.onStoreGet?.bind(this);
+        this.onStoreDelete = options?.onStoreDelete?.bind(this);
+        this.onStoreRestore = options?.onStoreRestore?.bind(this);
+
         const name = storeName || 'default_llama_store';
         this.llamaStoreConfig.storeName = name;
         const existingStoreConfig = localStorage.getItem(
@@ -50,11 +63,14 @@ export class LlamaStore<T> {
                 JSON.parse(existingStoreConfig);
             const keysAsSet = new Set(parsedConfig.keysAvailable);
 
-            this.llamaStoreConfig = {
+            const restoredStore: LlamaStoreConfig<T> = {
                 storeName: name,
                 keysAvailable: keysAsSet,
                 meta: parsedConfig.meta,
             };
+            this.llamaStoreConfig = restoredStore;
+
+            this.onStoreRestore && this.onStoreRestore(restoredStore);
         } else {
             // Must initialize the store
 
@@ -72,6 +88,13 @@ export class LlamaStore<T> {
     }
 
     /**
+     * @returns name of the store instance, from the llamaStoreConfig
+     */
+    get storeName() {
+        return this.llamaStoreConfig.storeName;
+    }
+
+    /**
      *
      * @returns key where store config is stored to in localStorage
      */
@@ -82,14 +105,14 @@ export class LlamaStore<T> {
     /**
      * Updates storeConfig metadata
      */
-    private storeUpdated() {
+    private setStoreLastUpdatedToNow() {
         this.llamaStoreConfig.meta.lastUpdated = Date.now().toString();
     }
 
     /**
      * Updates storeConfig metadata
      */
-    private storeAccessed() {
+    private setStoreLastAccessedToNow() {
         this.llamaStoreConfig.meta.lastAccessed = Date.now().toString();
     }
 
@@ -102,6 +125,9 @@ export class LlamaStore<T> {
         return `${this.storeName}__${String(forKey)}`;
     }
 
+    /**
+     * Stores the current store config to localStorage
+     */
     private saveCurrentConfig() {
         function Set_toJSON(key: string, value: any) {
             if (typeof value === 'object' && value instanceof Set) {
@@ -118,13 +144,16 @@ export class LlamaStore<T> {
     }
 
     get knownKeys() {
-        this.storeAccessed();
+        this.setStoreLastAccessedToNow();
         this.saveCurrentConfig();
         return this.llamaStoreConfig.keysAvailable;
     }
 
     get<K extends keyof T>(key: K): T[K] | null {
-        this.storeAccessed();
+        try {
+            this.onStoreGet && this.onStoreGet(key);
+        } catch (error) {}
+        this.setStoreLastAccessedToNow();
         this.saveCurrentConfig();
         const val = localStorage.getItem(this.localStorageKeyFor(key));
         if (!val) return null;
@@ -142,7 +171,10 @@ export class LlamaStore<T> {
      * @param value
      */
     set<K extends keyof T>(key: K, value: T[K]) {
-        this.storeUpdated();
+        try {
+            this.onStoreSet && this.onStoreSet(key, value);
+        } catch (error) {}
+        this.setStoreLastUpdatedToNow();
         if (!key) throw Error('Invalid key provided');
         try {
             // Try to JSON.stringify when value not string
@@ -160,7 +192,10 @@ export class LlamaStore<T> {
      * Removes key from keysAvailable
      */
     delete<K extends keyof T>(key: K) {
-        this.storeUpdated();
+        try {
+            this.onStoreDelete && this.onStoreDelete(key);
+        } catch (error) {}
+        this.setStoreLastUpdatedToNow();
         localStorage.removeItem(this.localStorageKeyFor(key));
         this.llamaStoreConfig.keysAvailable.delete(key);
         this.saveCurrentConfig();

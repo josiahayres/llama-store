@@ -128,12 +128,12 @@ describe('Default store name when empty name provided', () => {
     });
 });
 
-describe('Events', () => {
+describe('LlamaStore options', () => {
     beforeEach(() => {
         localStorage.clear();
         jest.clearAllMocks();
     });
-    it('LlamaStore options ', () => {
+    it('onStoreInitialize is called ', () => {
         const options: LlamaStoreOptions<MyStore> = {
             onStoreInitialize: () => {},
         };
@@ -146,5 +146,68 @@ describe('Events', () => {
                 keysAvailable: new Set([]),
             })
         );
+    });
+
+    it('onStoreRestore is called', () => {
+        const options: LlamaStoreOptions<MyStore> = {
+            onStoreRestore: () => {},
+        };
+        const spy = jest.spyOn(options, 'onStoreRestore');
+        const defaultStore = new LlamaStore<MyStore>('store', options);
+        expect(spy).not.toHaveBeenCalled();
+        defaultStore.set('name', 'spy');
+        const storeTwo = new LlamaStore<MyStore>('store', options);
+        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                storeName: 'store',
+                keysAvailable: new Set(),
+            })
+        );
+        expect(storeTwo.knownKeys.has('name')).toBeTruthy();
+        expect(storeTwo.knownKeys.has('age')).toBeFalsy();
+    });
+    it('onStoreSet is called', () => {
+        const options: LlamaStoreOptions<MyStore> = {
+            onStoreSet: () => {},
+        };
+        const spy_onStoreSet = jest.spyOn(options, 'onStoreSet');
+        const store = new LlamaStore<MyStore>('store', options);
+
+        expect(spy_onStoreSet).not.toHaveBeenCalled();
+
+        store.set('name', 'llama');
+
+        expect(spy_onStoreSet).toHaveBeenCalled();
+        expect(spy_onStoreSet).toHaveBeenCalledWith('name', 'llama');
+    });
+
+    it('onStoreGet is called', () => {
+        const options: LlamaStoreOptions<MyStore> = {
+            onStoreGet: () => {},
+        };
+        const spy = jest.spyOn(options, 'onStoreGet');
+        const store = new LlamaStore<MyStore>('store', options);
+
+        expect(spy).not.toHaveBeenCalled();
+
+        store.get('name');
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledWith('name');
+    });
+    it('onStoreDelete is called', () => {
+        const options: LlamaStoreOptions<MyStore> = {
+            onStoreDelete: () => {},
+        };
+        const spy = jest.spyOn(options, 'onStoreDelete');
+        const store = new LlamaStore<MyStore>('store', options);
+
+        expect(spy).not.toHaveBeenCalled();
+
+        store.delete('name');
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy).toHaveBeenCalledWith('name');
     });
 });
