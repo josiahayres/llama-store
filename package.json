@@ -1,11 +1,11 @@
 {
     "name": "@josiahayres/llama-store",
     "version": "1.0.0",
-    "description": "**llama-store** is a Typescript library for interacting with browser storage. It makes it easy to store large objects into localStorage, and lets you so you can make small changes quickly. The restored objects are much more accurate copies of the saved ones and the API is incredibly simple. E.g.:",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "description": "**llama-store** is a Typescript library for interacting with browser localStorage. It makes it easy to store multiple items into localStorage, and lets you so you can make small changes quickly. The restored objects are much more accurate copies of the saved ones and the API is incredibly simple",
+    "main": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
     "scripts": {
-        "pre-commit": "npm run lint && npm run ban",
+        "pre-commit": "npm run prettier",
         "prepublish": "npm run build",
         "build": "tsc",
         "prettier": "pretty-quick --staged",

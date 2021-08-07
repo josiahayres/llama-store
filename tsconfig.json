@@ -7,14 +7,10 @@
         "outDir": "./dist",
         "strict": true,
         "allowJs": false,
+        "declarationMap": true,
+        "alwaysStrict": true,
+        "forceConsistentCasingInFileNames": true
     },
-    "include": [
-        "src/**/*.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist",
-        "*.config.*",
-        "src/**/*.spec.ts"
-    ]
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "dist", "*.config.*", "src/**/*.spec.ts"]
 }
